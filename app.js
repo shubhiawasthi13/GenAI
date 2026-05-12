@@ -5,10 +5,24 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function getGroqChatCompletion() {
   return groq.chat.completions.create({
+    // Configuration of LLM 
+    temperature:1,
+    // top_p:0.2,
+    // stop:'ga', //stoping case
+    // max_completion_tokens:'1000',
+    // frequency_penalty:1,
+    // presence_penalty:1,
     messages: [
       {
+        role: "system", // give persona
+        content:
+          "You are Jarves, a smart review grader. Your task is to analyse given review and return the sentiment. Classify the review as positive, neutral or negative. Output must be a single word.",
+      },
+      {
         role: "user",
-        content: "Explain the importance of fast language models in one line only",
+        content: `Review: These headphones arrived quickly and look great, but the left earcup stopped working after a week.
+        Sentiment:
+        `,
       },
     ],
     model: "llama-3.3-70b-versatile",
