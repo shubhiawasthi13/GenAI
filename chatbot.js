@@ -2,13 +2,14 @@ import Groq from "groq-sdk";
 import dotenv from "dotenv";
 import { tavily } from "@tavily/core";
 import readline from "node:readline/promises";
+import NodeCache from "node-cache";
 dotenv.config();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
-
+const myCache = new NodeCache( { stdTTL: 60 * 60 * 24} );
 //  Tool calling..................................
-export async function generate(userMessage) {
-  const messages = [
+export async function generate(userMessage,threadId) {
+  const baseMessage = [
     {
       role: "system",
       content:
@@ -38,6 +39,7 @@ A: (use the search tool to get the latest news)
 current date and time: ${new Date().toUTCString()}`,
     },
   ];
+  const messages = myCache.get(threadId) ?? baseMessage
 
   messages.push({
     role: "user",
@@ -77,6 +79,7 @@ current date and time: ${new Date().toUTCString()}`,
     const toolCalls = completion.choices[0].message.tool_calls;
 
     if (!toolCalls) {
+      myCache.set(threadId, messages)
       return completion.choices[0]?.message.content;
     }
 

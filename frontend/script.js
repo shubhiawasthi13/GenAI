@@ -6,6 +6,7 @@ console.log(input);
 
 input?.addEventListener("keyup", handleEnter);
 btn?.addEventListener("click", handleAsk);
+const threadId = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
 
 const loading = document.createElement('div');
 loading.className = 'my-6 animate-pulse';
@@ -37,7 +38,7 @@ async function callServer(inputText) {
     headers: {
       "content-type": "application/json",
     },
-    body: JSON.stringify({ message: inputText }),
+    body: JSON.stringify({threadId:threadId, message: inputText }),
   });
   if (!response.ok) {
     throw new Error("Error generating response");
