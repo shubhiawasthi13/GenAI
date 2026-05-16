@@ -7,6 +7,10 @@ console.log(input);
 input?.addEventListener("keyup", handleEnter);
 btn?.addEventListener("click", handleAsk);
 
+const loading = document.createElement('div');
+loading.className = 'my-6 animate-pulse';
+loading.textContent = 'Thinking...';
+
 async function generate(text) {
   // appned message to ui
   const msg = document.createElement("div");
@@ -14,12 +18,16 @@ async function generate(text) {
   msg.textContent = text;
   chatContainer?.appendChild(msg);
   input.value = "";
+
   // send it to llm
+  chatContainer.appendChild(loading)
   const assistantMessage = await callServer(text);
+
   //append response to the ui
   const assistanMsgllm = document.createElement("div");
   assistanMsgllm.className = "max-w-fit";
   assistanMsgllm.textContent = assistantMessage;
+  loading.remove();
   chatContainer?.appendChild(assistanMsgllm);
 }
 
@@ -34,9 +42,11 @@ async function callServer(inputText) {
   if (!response.ok) {
     throw new Error("Error generating response");
   }
+
   const result = await response.json();
   return result.message;
 }
+
 async function handleAsk(e) {
   const text = input?.value.trim();
   if (!text) {
