@@ -6,14 +6,13 @@ import NodeCache from "node-cache";
 dotenv.config();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
-const myCache = new NodeCache( { stdTTL: 60 * 60 * 24} );
+const myCache = new NodeCache({ stdTTL: 60 * 60 * 24 });
 //  Tool calling..................................
-export async function generate(userMessage,threadId) {
+export async function generate(userMessage, threadId) {
   const baseMessage = [
     {
       role: "system",
-      content:
-        `You are Jarves, a smart personal assistant.If you know the answer to a question, answer it directly in plain English.
+      content: `You are Jarves, a smart personal assistant.If you know the answer to a question, answer it directly in plain English.
 If the answer requires real-time, local, or up-to-date information, or if you don’t know the answer, use the available tool to find it.
 You have access to the following tool:
 
@@ -39,14 +38,19 @@ A: (use the search tool to get the latest news)
 current date and time: ${new Date().toUTCString()}`,
     },
   ];
-  const messages = myCache.get(threadId) ?? baseMessage
+  const messages = myCache.get(threadId) ?? baseMessage;
 
   messages.push({
     role: "user",
     content: userMessage,
   });
-
+  const MAX_RETRIES = 10;
+  let count = 0;
   while (true) {
+    if (count > MAX_RETRIES) {
+      return "I could not find the result, Please try again";
+    }
+    count++;
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: messages,
@@ -79,7 +83,7 @@ current date and time: ${new Date().toUTCString()}`,
     const toolCalls = completion.choices[0].message.tool_calls;
 
     if (!toolCalls) {
-      myCache.set(threadId, messages)
+      myCache.set(threadId, messages);
       return completion.choices[0]?.message.content;
     }
 
